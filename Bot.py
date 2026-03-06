@@ -36,14 +36,18 @@ async def on_ready():
     ],
 
     map_name=[
+        app_commands.Choice(name="Breeze", value="Abyss"),
         app_commands.Choice(name="Ascent", value="Ascent"),
         app_commands.Choice(name="Bind", value="Bind"),
+        app_commands.Choice(name="Breeze", value="Breeze"),
+        app_commands.Choice(name="Breeze", value="Corrode"),
+        app_commands.Choice(name="Breeze", value="Fracture"),
         app_commands.Choice(name="Haven", value="Haven"),
-        app_commands.Choice(name="Split", value="Split"),
-        app_commands.Choice(name="Lotus", value="Lotus"),
-        app_commands.Choice(name="Sunset", value="Sunset"),
         app_commands.Choice(name="Icebox", value="Icebox"),
-        app_commands.Choice(name="Breeze", value="Breeze")
+        app_commands.Choice(name="Lotus", value="Lotus"),
+        app_commands.Choice(name="Icebox", value="Pearl"),
+        app_commands.Choice(name="Split", value="Split"),
+        app_commands.Choice(name="Sunset", value="Sunset")
     ],
 
     timezone=[
@@ -76,7 +80,7 @@ async def scrim(
 > **Map:** {map_name.value}
 
 ⚠️ **Note:**  
-The @IGL of the team is responsible for any player's absence.  
+The <@1479519180054335548> of the team is responsible for any player's absence.  
 Players must inform beforehand so the event runs smoothly.
 """
 
