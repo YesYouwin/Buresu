@@ -46,9 +46,9 @@ async def on_ready():
 @app_commands.choices(
 
     scrim_type=[
-        app_commands.Choice(name="In-Houses", value="In-Houses"),
-        app_commands.Choice(name="Scrim", value="Scrim"),
-        app_commands.Choice(name="Tournament", value="Tournament")
+        app_commands.Choice(name="In-Houses", value="IN-HOUSES"),
+        app_commands.Choice(name="Scrim", value="SCRIM"),
+        app_commands.Choice(name="Tournament", value="TOURNAMENT")
     ],
 
     map_name=[
@@ -87,9 +87,8 @@ async def scrim(
 ):
 
     message = f"""
-# 📅 SCRIM SCHEDULE
+# 📅 {scrim_type.value} SCHEDULE
 
-> **Scrim Type:** {scrim_type.value}
 > **Teams:** {team_a} VS {team_b}
 > **Time:** {time} {timezone.value}
 > **Date:** {date}
