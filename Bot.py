@@ -96,7 +96,7 @@ async def scrim(
 
 > **Teams:** {team_a} VS {team_b}
 > **Time:** {time} {timezone.value}
-> **Date:** {date}
+> **Day/Date:** {formatted_date}
 > **Map:** {map_name.value}
 
 ⚠️ **Note**  
