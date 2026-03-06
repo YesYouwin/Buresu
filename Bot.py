@@ -48,9 +48,9 @@ async def on_ready():
 @app_commands.choices(
 
     scrim_type=[
-        app_commands.Choice(name="In-Houses", value="IN-HOUSES"),
-        app_commands.Choice(name="Scrim", value="SCRIM"),
-        app_commands.Choice(name="Tournament", value="TOURNAMENT")
+        app_commands.Choice(name="In-Houses", value="<:InHouses:1442182642920587324> IN-HOUSES"),
+        app_commands.Choice(name="Scrim", value="<:Scrim:1456784764798374132> SCRIM"),
+        app_commands.Choice(name="Tournament", value="<a:Red_Fire:1470755261676519436> TOURNAMENT")
     ],
 
     map_name=[
@@ -109,7 +109,7 @@ async def scrim(
         return
 
     message = f"""
-# 📅 {scrim_type.value} SCHEDULE
+# {scrim_type.value} SCHEDULE
 
 > **Teams:** {team_a} VS {team_b}
 > **Time:** {time} {timezone.value}
