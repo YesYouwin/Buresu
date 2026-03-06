@@ -18,7 +18,6 @@ def run():
 def keep_alive():
     t = Thread(target=run)
     t.start()
-    
 
 TOKEN = os.getenv("TOKEN")
 
@@ -38,13 +37,16 @@ async def on_ready():
     team_a="First Team",
     team_b="Second Team",
     time="Match Time",
-    date="Match Date",
-    map_name="Map",
+    date="Match Date (DD/MM/YYYY)",
+    map_name="Map 1",
+    map2="Map 2 (Optional)",
+    map3="Map 3 (Optional)",
+    map4="Map 4 (BO5 only)",
+    map5="Map 5 (BO5 only)",
     timezone="Timezone",
     format="Format"
 )
 
-# DROPDOWNS
 @app_commands.choices(
 
     scrim_type=[
@@ -82,7 +84,6 @@ async def on_ready():
         app_commands.Choice(name="BO5", value="Best Of 5 Maps"),
         app_commands.Choice(name="MR24", value="Max Rounds 24")
     ]
-    
 )
 
 async def scrim(
@@ -94,7 +95,11 @@ async def scrim(
     date: str,
     map_name: app_commands.Choice[str],
     timezone: app_commands.Choice[str],
-    format: app_commands.Choice[str]
+    format: app_commands.Choice[str],
+    map2: app_commands.Choice[str] | None = None,
+    map3: app_commands.Choice[str] | None = None,
+    map4: app_commands.Choice[str] | None = None,
+    map5: app_commands.Choice[str] | None = None
 ):
 
     try:
@@ -108,6 +113,20 @@ async def scrim(
         )
         return
 
+    # Build map list
+    maps = [map_name.value]
+
+    if map2:
+        maps.append(map2.value)
+    if map3:
+        maps.append(map3.value)
+    if map4:
+        maps.append(map4.value)
+    if map5:
+        maps.append(map5.value)
+
+    map_list = "\n".join([f"Map {i+1}: {m}" for i, m in enumerate(maps)])
+
     message = f"""
 # {scrim_type.value} SCHEDULE
 
@@ -115,7 +134,9 @@ async def scrim(
 > **Time:** {time} {timezone.value}
 > **Day/Date:** {formatted_date}
 > **Format:** {format.value}
-> **Map:** {map_name.value}
+
+> **Maps**
+{map_list}
 
 ⚠️ **Note**  
 - The <@&1442456929321619556> of the team is responsible for any player's absence.  
@@ -123,6 +144,7 @@ async def scrim(
 """
 
     await interaction.response.send_message(message)
+
 
 keep_alive()
 bot.run(TOKEN)
