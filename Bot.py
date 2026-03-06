@@ -94,9 +94,9 @@ async def scrim(
 > **Date:** {date}
 > **Map:** {map_name.value}
 
-⚠️ **Note:**  
-The <@&1479519180054335548> of the team is responsible for any player's absence.  
-Players must inform beforehand so the event runs smoothly.
+⚠️ **Note**  
+- The <@&1442456929321619556> of the team is responsible for any player's absence.  
+- Players must inform about any discrepancy beforehand so the event runs smoothly.
 """
 
     await interaction.response.send_message(message)
