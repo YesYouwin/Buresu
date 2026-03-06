@@ -1,76 +1,92 @@
 import discord
-import os
 from discord.ext import commands
-import datetime
+from discord import app_commands
+import os
 
 TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.default()
-intents.message_content = True
+intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
+# Sync slash commands
 @bot.event
 async def on_ready():
-    print(f'Bot logged in as {bot.user}')
-
-@bot.command()
-async def ping(ctx):
-    await ctx.send("Pong!")
-def convert_to_sgt(time_str):
-    ist = datetime.datetime.strptime(time_str, "%I:%M%p")
-    sgt = ist + datetime.timedelta(hours=2, minutes=30)
-    return sgt.strftime("%I:%M %p")
-
-
-@bot.command(name="game")
-async def scrim(ctx, scrim_type, teams, time, timezone, date, map_name):
-
     try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} command(s)")
+    except Exception as e:
+        print(e)
 
-        team1, team2 = teams.split("Vs")
+    print(f"Logged in as {bot.user}")
 
-        sgt_time = convert_to_sgt(time)
 
-        embed = discord.Embed(
-            title="{scrim_type} Schedule",
-            color=discord.Color.red()
-        )
+# SCRIM COMMAND
+@bot.tree.command(name="scrim", description="Create a Valorant scrim schedule")
 
-        embed.add_field(
-            name="Teams",
-            value=f"{team1} VS {team2}",
-            inline=False
-        )
+@app_commands.describe(
+    scrim_type="Type of scrim",
+    team1="First team role",
+    team2="Second team role",
+    time="Match time (example: 7:30PM)",
+    date="Date (DD/MM/YYYY)",
+    map_name="Map name",
+    timezone="Select timezone"
+)
 
-        embed.add_field(
-            name="Time",
-            value=f"{time} {timezone} / {sgt_time} SGT",
-            inline=False
-        )
+@app_commands.choices(
+    timezone=[
+        app_commands.Choice(name="IST", value="IST"),
+        app_commands.Choice(name="SGT", value="SGT"),
+        app_commands.Choice(name="GMT", value="GMT"),
+        app_commands.Choice(name="PHT", value="PHT"),
+    ]
+)
 
-        embed.add_field(
-            name="Day/Date",
-            value=date,
-            inline=False
-        )
+async def scrim(
+    interaction: discord.Interaction,
+    scrim_type: str,
+    team1: discord.Role,
+    team2: discord.Role,
+    time: str,
+    date: str,
+    map_name: str,
+    timezone: app_commands.Choice[str]
+):
 
-        embed.add_field(
-            name="Map",
-            value=map_name,
-            inline=False
-        )
+    embed = discord.Embed(
+        color=discord.Color.red()
+    )
 
-        embed.add_field(
-            name="Note",
-            value="The @IGL of the team is responsible for any player's absence. Please inform beforehand.",
-            inline=False
-        )
+    embed.description = f"""
+🆚 **Teams**
+{team1.mention} **VS** {team2.mention}
 
-        await ctx.send(embed=embed)
+📌 **Scrim Type**
+{scrim_type}
 
-    except:
-        await ctx.send("Format error. Example:\n!game In-Houses Team1VsTeam2 7:30PM IST 21/10/2026 Split")
-        
+🕒 **Time**
+{time} {timezone.value}
+
+📅 **Date**
+{date}
+
+🗺 **Map**
+{map_name}
+
+⚠ **Note**
+The **IGL** of the team is responsible for any player's absence.
+Players must inform beforehand so the scrim runs smoothly.
+"""
+
+    embed.set_footer(text="Scrim Manager")
+
+    await interaction.response.send_message(
+        content=f"## 🎮 SCRIM SCHEDULE\n{team1.mention} {team2.mention}",
+        embed=embed
+    )
+
+
 bot.run(TOKEN)
-
