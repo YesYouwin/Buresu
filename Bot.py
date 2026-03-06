@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from datetime import datetime
 import os
 from flask import Flask
 from threading import Thread
@@ -72,7 +73,7 @@ async def on_ready():
         app_commands.Choice(name="GMT", value="GMT"),
         app_commands.Choice(name="PST", value="PST")
     ]
-
+    
 )
 
 async def scrim(
@@ -85,6 +86,10 @@ async def scrim(
     map_name: app_commands.Choice[str],
     timezone: app_commands.Choice[str]
 ):
+
+    parsed_date = datetime.strptime(date, "%d/%m/%Y")
+    day_name = parsed_date.strftime("%A")
+    formatted_date = f"{date} [{day_name}]"
 
     message = f"""
 # 📅 {scrim_type.value} SCHEDULE
