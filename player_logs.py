@@ -26,6 +26,7 @@ class PlayerLogs(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="playerlogs", description="Create a formatted player log")
+    @is_staff()
     @app_commands.choices(action=[
         app_commands.Choice(name="Recruitment", value="Recruitment"),
         app_commands.Choice(name="Promotion", value="Promotion"),
@@ -113,6 +114,7 @@ class PlayerLogs(commands.Cog):
         save_logs(logs)
 
     @app_commands.command(name="playerhistory", description="Retrieve player history")
+    @is_staff()
     async def playerhistory(
         self,
         interaction: discord.Interaction,
