@@ -11,6 +11,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
+
 # Load Google credentials from Render environment variable
 service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])
 
@@ -26,71 +27,83 @@ FOLDER_ID = "1BqiW_4RmbYMqmL1EzUKXA1Opj7PviDH5"
 
 
 def get_file_id():
-    results = service.files().list(
-        q=f"name='{FILE_NAME}' and '{FOLDER_ID}' in parents",
-        spaces='drive'
-    ).execute()
+    try:
+        results = service.files().list(
+            q=f"name='{FILE_NAME}' and '{FOLDER_ID}' in parents",
+            spaces="drive",
+            fields="files(id,name)"
+        ).execute()
 
-    files = results.get('files', [])
-    return files[0]['id'] if files else None
+        files = results.get("files", [])
+        return files[0]["id"] if files else None
+    except Exception as e:
+        print("Drive lookup error:", e)
+        return None
 
 
 def load_logs():
-    file_id = get_file_id()
-
-    if not file_id:
-        return []
-
-    request = service.files().get_media(fileId=file_id)
-    fh = io.BytesIO()
-
-    downloader = MediaIoBaseDownload(fh, request)
-    done = False
-
-    while not done:
-        status, done = downloader.next_chunk()
-
-    fh.seek(0)
-
     try:
+        file_id = get_file_id()
+
+        if not file_id:
+            return []
+
+        request = service.files().get_media(fileId=file_id)
+        fh = io.BytesIO()
+
+        downloader = MediaIoBaseDownload(fh, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        fh.seek(0)
         return json.load(fh)
-    except:
+
+    except Exception as e:
+        print("Load logs error:", e)
         return []
 
 
 def save_logs(logs):
-    file_id = get_file_id()
-    data = json.dumps(logs, indent=4)
+    try:
+        file_id = get_file_id()
 
-    fh = io.BytesIO(data.encode())
+        data = json.dumps(logs, indent=4)
+        fh = io.BytesIO(data.encode())
 
-    media = MediaIoBaseUpload(
-        fh,
-        mimetype="application/json",
-        resumable=True
-    )
+        media = MediaIoBaseUpload(
+            fh,
+            mimetype="application/json",
+            resumable=True
+        )
 
-    if file_id:
-        service.files().update(
-            fileId=file_id,
-            media_body=media
-        ).execute()
-    else:
-        file_metadata = {
-            "name": FILE_NAME,
-            "parents": [FOLDER_ID]
-        }
+        if file_id:
+            service.files().update(
+                fileId=file_id,
+                media_body=media
+            ).execute()
 
-        service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields="id"
-        ).execute()
+        else:
+            file_metadata = {
+                "name": FILE_NAME,
+                "parents": [FOLDER_ID]
+            }
+
+            service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields="id"
+            ).execute()
+
+    except Exception as e:
+        print("Save logs error:", e)
 
 
 class PlayerLogs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
 
     @app_commands.command(name="playerlogs", description="Create a formatted player log")
     @is_staff()
@@ -113,12 +126,14 @@ class PlayerLogs(commands.Cog):
         reason: str
     ):
 
+        await interaction.response.defer(ephemeral=True)
+
         try:
             parsed_date = datetime.strptime(date, "%d/%m/%Y")
             day_name = parsed_date.strftime("%A")
             formatted_date = f"{date} [{day_name}]"
         except ValueError:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Invalid date format. Use **DD/MM/YYYY**",
                 ephemeral=True
             )
@@ -157,12 +172,8 @@ class PlayerLogs(commands.Cog):
 
         log_channel = self.bot.get_channel(1443545539445653604)
 
-        if log_channel is None:
-            await interaction.response.send_message("❌ Log channel not found.", ephemeral=True)
-            return
-
-        await log_channel.send(embed=embed)
-        await interaction.response.send_message("✅ Player log created.", ephemeral=True)
+        if log_channel:
+            await log_channel.send(embed=embed)
 
         logs = load_logs()
 
@@ -179,24 +190,36 @@ class PlayerLogs(commands.Cog):
 
         save_logs(logs)
 
+        await interaction.followup.send(
+            "✅ Player log created Pookie :D",
+            ephemeral=True
+        )
+
+
     @app_commands.command(name="playerhistory", description="Retrieve player history")
     @is_staff()
     async def playerhistory(self, interaction: discord.Interaction, search: str):
+
+        await interaction.response.defer(ephemeral=True)
 
         logs = load_logs()
         results = []
 
         for log in logs:
-            if search == log["discord_id"] or search.lower() == log["ign"].lower() or search == log["date"]:
+            if (
+                search == log["discord_id"]
+                or search.lower() == log["ign"].lower()
+                or search == log["date"]
+            ):
                 results.append(log)
 
         if not results:
-            await interaction.response.send_message("❌ No logs found.", ephemeral=True)
+            await interaction.followup.send("❌ No logs found.", ephemeral=True)
             return
 
         divider = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"📜 Found {len(results)} log(s) for `{search}`:",
             ephemeral=True
         )
