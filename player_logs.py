@@ -58,7 +58,7 @@ class PlayerLogs(commands.Cog):
         embed = discord.Embed(
             description=f"""
 {divider}
-{emoji} {action.value}
+**{emoji} {action.value}**
 
 {discordname.mention}
 
@@ -75,7 +75,7 @@ class PlayerLogs(commands.Cog):
         )
 
         embed.set_thumbnail(url=discordname.display_avatar.url)
-        embed.set_footer(text="© Buresu • *{year}*")
+        embed.set_footer(text="© Buresu • {year}")
 
         await interaction.response.send_message(embed=embed)
 
