@@ -63,10 +63,15 @@ class Scrim(commands.Cog):
             )
             return
 
-        # Try to find roles for team_a and team_b
         guild = interaction.guild
+
+        # Try to find roles for team_a and team_b
         team_a_role = discord.utils.get(guild.roles, name=team_a)
         team_b_role = discord.utils.get(guild.roles, name=team_b)
+
+        # Keep original mentionable state
+        team_a_original = team_a_role.mentionable if team_a_role else None
+        team_b_original = team_b_role.mentionable if team_b_role else None
 
         # Make roles mentionable if needed
         if team_a_role and not team_a_role.mentionable:
@@ -74,7 +79,7 @@ class Scrim(commands.Cog):
         if team_b_role and not team_b_role.mentionable:
             await team_b_role.edit(mentionable=True)
 
-        # Determine what to display
+        # Determine display names
         team_a_display = team_a_role.mention if team_a_role else team_a
         team_b_display = team_b_role.mention if team_b_role else team_b
 
@@ -90,24 +95,27 @@ class Scrim(commands.Cog):
         else:
             await interaction.response.send_message("Scrim scheduled!", ephemeral=False)
 
-        # Create embed for schedule
-        embed = discord.Embed(
-            title=f"{scrim_type.value} SCHEDULE",
-            color=discord.Color.blurple()
-        )
-        embed.add_field(name="Teams", value=f"{team_a_display} VS {team_b_display}", inline=False)
-        embed.add_field(name="Time", value=f"{time} {timezone.value}", inline=False)
-        embed.add_field(name="Day/Date", value=formatted_date, inline=False)
-        embed.add_field(name="Format", value=format.value, inline=False)
-        embed.add_field(name="Map", value=map_name, inline=False)
-        embed.add_field(
-            name="Note",
-            value="- <@&1442456929321619556> are responsible for any player's absence.\n"
-                  "- Players must inform about any discrepancy beforehand so the event runs smoothly.",
-            inline=False
+        # Build the plain text schedule
+        schedule_message = (
+            f"**{scrim_type.value} SCHEDULE**\n\n"
+            f"**Teams:** {team_a_display} VS {team_b_display}\n"
+            f"**Time:** {time} {timezone.value}\n"
+            f"**Day/Date:** {formatted_date}\n"
+            f"**Format:** {format.value}\n"
+            f"**Map:** {map_name}\n\n"
+            f"⚠️ **Note:**\n"
+            f"- <@&1442456929321619556> are responsible for any player's absence.\n"
+            f"- Players must inform about any discrepancy beforehand so the event runs smoothly."
         )
 
-        await interaction.followup.send(embed=embed)
+        # Send the schedule
+        await interaction.followup.send(schedule_message)
+
+        # Revert roles back to original mentionable state
+        if team_a_role and team_a_original is not None and team_a_role.mentionable != team_a_original:
+            await team_a_role.edit(mentionable=team_a_original)
+        if team_b_role and team_b_original is not None and team_b_role.mentionable != team_b_original:
+            await team_b_role.edit(mentionable=team_b_original)
 
 
 async def setup(bot):
