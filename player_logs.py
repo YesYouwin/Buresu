@@ -10,11 +10,20 @@ import os
 PLAYER_LOGS_FILE = "player_logs.json"
 
 
+PLAYER_LOGS_FILE = "player_logs.json"
+
 def load_logs():
     if not os.path.exists(PLAYER_LOGS_FILE):
         return []
-    with open(PLAYER_LOGS_FILE, "r") as f:
-        return json.load(f)
+
+    if os.path.getsize(PLAYER_LOGS_FILE) == 0:
+        return []
+
+    try:
+        with open(PLAYER_LOGS_FILE, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
 
 
 def save_logs(logs):
