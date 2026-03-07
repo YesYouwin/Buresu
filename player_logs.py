@@ -6,30 +6,27 @@ from utils import is_staff
 import json
 import os
 
-
 PLAYER_LOGS_FILE = "player_logs.json"
 
-
-PLAYER_LOGS_FILE = "player_logs.json"
+# Ensure file exists on startup
+if not os.path.exists(PLAYER_LOGS_FILE):
+    with open(PLAYER_LOGS_FILE, "w") as f:
+        json.dump([], f)
 
 def load_logs():
-    if not os.path.exists(PLAYER_LOGS_FILE):
-        return []
-
-    if os.path.getsize(PLAYER_LOGS_FILE) == 0:
-        return []
-
     try:
         with open(PLAYER_LOGS_FILE, "r") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except (json.JSONDecodeError, FileNotFoundError):
         return []
 
-
 def save_logs(logs):
-    with open(PLAYER_LOGS_FILE, "w") as f:
-        json.dump(logs, f, indent=4)
-
+    try:
+        with open(PLAYER_LOGS_FILE, "w") as f:
+            json.dump(logs, f, indent=4)
+    except Exception as e:
+        print(f"Error saving logs: {e}")
 
 class PlayerLogs(commands.Cog):
     def __init__(self, bot):
@@ -68,7 +65,7 @@ class PlayerLogs(commands.Cog):
             )
             return
 
-        # Choose emoji and color
+        # Emoji and color
         if action.value in ["Recruitment", "Promotion"]:
             emoji = "<:Plus:1438977678890766517>"
             color = discord.Color.green()
@@ -96,7 +93,6 @@ class PlayerLogs(commands.Cog):
 """,
             color=color
         )
-
         embed.set_thumbnail(url=discordname.display_avatar.url)
         embed.set_footer(text=f"© Buresu • {datetime.now().year}")
 
@@ -109,7 +105,7 @@ class PlayerLogs(commands.Cog):
         await log_channel.send(embed=embed)
         await interaction.response.send_message("✅ Player log created.", ephemeral=True)
 
-        # Save log to JSON
+        # Save log to JSON safely
         logs = load_logs()
         logs.append({
             "action": action.value,
@@ -125,11 +121,7 @@ class PlayerLogs(commands.Cog):
 
     @app_commands.command(name="playerhistory", description="Retrieve player history")
     @is_staff()
-    async def playerhistory(
-        self,
-        interaction: discord.Interaction,
-        search: str
-    ):
+    async def playerhistory(self, interaction: discord.Interaction, search: str):
         logs = load_logs()
         results = []
 
@@ -143,12 +135,9 @@ class PlayerLogs(commands.Cog):
             return
 
         divider = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-        # Respond immediately so the interaction doesn't fail
         await interaction.response.send_message(f"📜 Found {len(results)} log(s) for `{search}`:", ephemeral=True)
 
         for log in results:
-            # Try to get Discord user object
             try:
                 user = await self.bot.fetch_user(int(log["discord_id"]))
                 mention = user.mention
@@ -157,7 +146,6 @@ class PlayerLogs(commands.Cog):
                 mention = f"<@{log['discord_id']}>"
                 avatar_url = None
 
-            # Emoji and color based on action
             if log["action"] in ["Recruitment", "Promotion"]:
                 emoji = "<:Plus:1438977678890766517>"
                 color = discord.Color.green()
@@ -165,7 +153,6 @@ class PlayerLogs(commands.Cog):
                 emoji = "<:Negative:1438979843252289656>"
                 color = discord.Color.red()
 
-            # Format date
             try:
                 parsed_date = datetime.strptime(log["date"], "%d/%m/%Y")
                 day_name = parsed_date.strftime("%A")
@@ -197,6 +184,7 @@ class PlayerLogs(commands.Cog):
             embed.set_footer(text=f"© Buresu • {datetime.now().year}")
 
             await interaction.followup.send(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(PlayerLogs(bot))
