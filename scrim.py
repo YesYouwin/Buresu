@@ -83,6 +83,9 @@ class Scrim(commands.Cog):
         team_a_display = team_a_role.mention if team_a_role else team_a
         team_b_display = team_b_role.mention if team_b_role else team_b
 
+        # Prepare allowed mentions
+        allowed_mentions = discord.AllowedMentions(roles=True)
+
         # Ping roles first if they exist
         ping_message = ""
         if team_a_role:
@@ -91,7 +94,7 @@ class Scrim(commands.Cog):
             ping_message += f"{team_b_display} "
 
         if ping_message:
-            await interaction.response.send_message(ping_message, ephemeral=False)
+            await interaction.response.send_message(ping_message, ephemeral=False, allowed_mentions=allowed_mentions)
         else:
             await interaction.response.send_message("Scrim scheduled!", ephemeral=False)
 
@@ -108,8 +111,8 @@ class Scrim(commands.Cog):
             f"- Players must inform about any discrepancy beforehand so the event runs smoothly."
         )
 
-        # Send the schedule
-        await interaction.followup.send(schedule_message)
+        # Send the schedule with role mentions allowed
+        await interaction.followup.send(schedule_message, allowed_mentions=allowed_mentions)
 
         # Revert roles back to original mentionable state
         if team_a_role and team_a_original is not None and team_a_role.mentionable != team_a_original:
