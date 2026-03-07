@@ -23,7 +23,7 @@ class PlayerLogs(commands.Cog):
         interaction: discord.Interaction,
         action: app_commands.Choice[str],
         ign: str,
-        discordname: discord.Member,
+        discordname: discord.User,
         date: str,
         team1: str,
         team2: str,
