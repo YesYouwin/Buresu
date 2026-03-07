@@ -27,7 +27,7 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 
 async def setup_hook():
     await bot.load_extension("scrim")
-    await bot.load_extension("player_logs")  # loads player_logs.py
+    await bot.load_extension("player_logs") 
 
 bot.setup_hook = setup_hook
 
