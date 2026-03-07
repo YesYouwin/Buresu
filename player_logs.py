@@ -10,12 +10,14 @@ class PlayerLogs(commands.Cog):
 
 
     @app_commands.command(name="playerlogs", description="Create a formatted player log")
+
     @app_commands.choices(action=[
         app_commands.Choice(name="Recruitment", value="Recruitment"),
         app_commands.Choice(name="Promotion", value="Promotion"),
         app_commands.Choice(name="Relegation", value="Relegation"),
         app_commands.Choice(name="Removed", value="Removed")
     ])
+
     async def playerlogs(
         self,
         interaction: discord.Interaction,
@@ -41,29 +43,52 @@ class PlayerLogs(commands.Cog):
             )
             return
 
-        # Determine emoji
+        # Determine emoji + embed color
         if action.value in ["Recruitment", "Promotion"]:
             emoji = "<:Plus:1438977678890766517>"
+            color = discord.Color.green()
         else:
             emoji = "<:Negative:1438979843252289656>"
+            color = discord.Color.red()
 
-        log = f"""
-----------------------------------------------------
-***{action.value}***
+        embed = discord.Embed(
+            title=f"{action.value}",
+            color=color
+        )
 
-{emoji} {formatted_date}
+        embed.add_field(
+            name="Date",
+            value=f"{emoji} {formatted_date}",
+            inline=False
+        )
 
-{discordname.mention}
+        embed.add_field(
+            name="Player",
+            value=discordname.mention,
+            inline=False
+        )
 
-**IGN** - [{ign}]({trackerid})
+        embed.add_field(
+            name="IGN",
+            value=f"[{ign}]({trackerid})",
+            inline=False
+        )
 
-**{team1}** ---> **{team2}**
+        embed.add_field(
+            name="Team Change",
+            value=f"**{team1}** ➜ **{team2}**",
+            inline=False
+        )
 
-**Reason** - *{reason}*
-----------------------------------------------------
-"""
+        embed.add_field(
+            name="Reason",
+            value=f"*{reason}*",
+            inline=False
+        )
 
-        await interaction.response.send_message(log)
+        embed.set_footer(text="Player Logs")
+
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):
