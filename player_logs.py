@@ -172,6 +172,13 @@ class PlayerLogs(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
+
+        search = search.strip()
+
+        # Convert Discord mention → ID
+        if search.startswith("<@") and search.endswith(">"):
+            search = search.replace("<@", "").replace(">", "").replace("!", "")
+        
         # Fetch logs
         try:
             rows = await asyncio.to_thread(search_logs, search)
