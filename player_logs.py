@@ -134,12 +134,22 @@ class PlayerLogs(commands.Cog):
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
 
-        try:
-            rows = search_logs(search)
-        except Exception as e:
-            print("Search error:", e)
-            await interaction.followup.send("❌ Database error occurred.", ephemeral=True)
-            return
+        def search_logs(search):
+            try:
+                with get_conn() as conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute("""
+                            SELECT action, discord_id, ign, team1, team2, date, trackerid, reason
+                            FROM player_logs
+                            WHERE discord_id = %s
+                            OR LOWER(ign) LIKE %s
+                            OR date LIKE %s
+                            ORDER BY id DESC
+                    """, (search, f"%{search.lower()}%", f"%{search}%"))
+                    return cursor.fetchall()
+            except Exception as e:
+                print("search_logs exception:", e)
+                raise
 
         if not rows:
             await interaction.followup.send("❌ No logs found", ephemeral=True)
