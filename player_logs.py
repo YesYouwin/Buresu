@@ -3,42 +3,21 @@ from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
 from utils import is_staff
-import sqlite3
+import psycopg2
+import os
 
-DB_FILE = "player_logs.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS player_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        action TEXT,
-        discord_id TEXT,
-        ign TEXT,
-        team1 TEXT,
-        team2 TEXT,
-        date TEXT,
-        trackerid TEXT,
-        reason TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
+conn = psycopg2.connect(DATABASE_URL)
+cursor = conn.cursor()
 
 
 def save_log(action, discord_id, ign, team1, team2, date, trackerid, reason):
 
-    conn = sqlite3.connect(DB_FILE, timeout=10)
-    cursor = conn.cursor()
-
     cursor.execute("""
     INSERT INTO player_logs
     (action, discord_id, ign, team1, team2, date, trackerid, reason)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
     """, (
         action,
         discord_id,
@@ -51,20 +30,16 @@ def save_log(action, discord_id, ign, team1, team2, date, trackerid, reason):
     ))
 
     conn.commit()
-    conn.close()
 
 
 def search_logs(search):
 
-    conn = sqlite3.connect(DB_FILE, timeout=10)
-    cursor = conn.cursor()
-
     cursor.execute("""
     SELECT action, discord_id, ign, team1, team2, date, trackerid, reason
     FROM player_logs
-    WHERE discord_id = ?
-    OR LOWER(ign) LIKE ?
-    OR date LIKE ?
+    WHERE discord_id = %s
+    OR LOWER(ign) LIKE %s
+    OR date LIKE %s
     ORDER BY id DESC
     """, (
         search,
@@ -72,18 +47,13 @@ def search_logs(search):
         f"%{search}%"
     ))
 
-    rows = cursor.fetchall()
-
-    conn.close()
-
-    return rows
+    return cursor.fetchall()
 
 
 class PlayerLogs(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        init_db()
 
 
     @app_commands.command(name="playerlogs", description="Create a formatted player log")
@@ -120,12 +90,14 @@ class PlayerLogs(commands.Cog):
             )
             return
 
+
         if action.value in ["Recruitment", "Promotion"]:
             emoji = "<:Plus:1438977678890766517>"
             color = discord.Color.green()
         else:
             emoji = "<:Negative:1438979843252289656>"
             color = discord.Color.red()
+
 
         divider = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
@@ -200,12 +172,14 @@ class PlayerLogs(commands.Cog):
             )
             return
 
+
         divider = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
         await interaction.followup.send(
             f"📜 Found {len(rows)} log(s) for `{search}`",
             ephemeral=True
         )
+
 
         for action, discord_id, ign, team1, team2, date, trackerid, reason in rows:
 
@@ -217,6 +191,7 @@ class PlayerLogs(commands.Cog):
                 mention = f"<@{discord_id}>"
                 avatar = None
 
+
             if action in ["Recruitment", "Promotion"]:
                 emoji = "<:Plus:1438977678890766517>"
                 color = discord.Color.green()
@@ -224,11 +199,13 @@ class PlayerLogs(commands.Cog):
                 emoji = "<:Negative:1438979843252289656>"
                 color = discord.Color.red()
 
+
             try:
                 parsed = datetime.strptime(date, "%d/%m/%Y")
                 formatted_date = f"{date} [{parsed.strftime('%A')}]"
             except:
                 formatted_date = date
+
 
             embed = discord.Embed(
                 description=f"""
