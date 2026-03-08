@@ -6,9 +6,16 @@ from utils import is_staff
 import psycopg2
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv(DATABASE_URL, sslmode="require")
 
-conn = psycopg2.connect(DATABASE_URL)
+conn = psycopg2.connect(
+    host="aws-1-ap-south-1.pooler.supabase.com",
+    database="postgres",
+    user="postgres.yogslxkoraisxaukamcd",
+    password=os.getenv("DB_PASSWORD"),
+    port=5432,
+    sslmode="require"
+)conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor()
 
 
