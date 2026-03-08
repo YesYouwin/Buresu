@@ -4,6 +4,7 @@ from discord.ext import commands
 from datetime import datetime
 from utils import is_staff
 import traceback
+import asyncio
 import psycopg2
 import os
 
@@ -146,7 +147,8 @@ class PlayerLogs(commands.Cog):
 
         # Save to database
         try:
-            save_log(
+            await asyncio.to_thread(
+                save_log,
                 action.value,
                 str(discordname.id),
                 ign,
@@ -154,7 +156,7 @@ class PlayerLogs(commands.Cog):
                 team2,
                 date,
                 trackerid,
-                reason,
+                reason
             )
         except Exception as e:
             print("Database error:", e)
@@ -172,7 +174,7 @@ class PlayerLogs(commands.Cog):
 
         # Fetch logs
         try:
-            rows = search_logs(search)
+            rows = await asyncio.to_thread(search_logs, search)
         except Exception:
             error_msg = traceback.format_exc()
 
